@@ -1,12 +1,13 @@
 import struct
 import socket
+import argparse
 
-def create_packet():
+def create_packet(seq_num):
     type = 8
     code = 0
     checksum_placeholder = 0
     identifier = 23  # randomly chosen number
-    seq_number = 0
+    seq_number = seq_num
 
     initial_packet = struct.pack('!BBHHH', type, code, checksum_placeholder, identifier, seq_number)
 
@@ -25,10 +26,10 @@ def create_packet():
 
     return struct.pack('!BBHHH', type, code, complemented_checksum, identifier, seq_number)
 
-def send_packet(packet):
+def send_packet(packet, address):
     raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
     try:
-        raw_socket.sendto(packet, (socket.gethostbyname("google.com"), 1))
+        raw_socket.sendto(packet, (address, 1))
     except PermissionError:
         print("You need admin")
     finally:
@@ -42,11 +43,27 @@ def recieve_packet():
     raw_socket.close()
 
 def main():
-    packet = create_packet()
+    # Define command line parameters.
+    parser = argparse.ArgumentParser(prog='my_ping', description='Sends and receives ICMP echo packets')
+    parser.add_argument('address')
+    parser.add_argument('-c', action='store')
+    parser.add_argument('-i', action='store')
+    parser.add_argument('-s', action='store_true')
+    parser.add_argument('-t', action='store_true')
 
-    send_packet(packet)
+    args = parser.parse_args()
 
-    recieve_packet()
+    iteration = 0
+    while True:
+        packet = create_packet(iteration)
+
+        send_packet(packet, args.address)
+
+        recieve_packet()
+
+        iteration += 1
+        if args.c is not None and iteration >= int(args.c):
+            break
 
 if __name__ == '__main__':
     main()
