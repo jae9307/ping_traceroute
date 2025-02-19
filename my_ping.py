@@ -1,6 +1,8 @@
 import struct
 import socket
 import argparse
+import time
+
 
 def create_packet(seq_num):
     type = 8
@@ -64,6 +66,9 @@ def main():
         iteration += 1
         if args.c is not None and iteration >= int(args.c):
             break
+
+        time_to_sleep = 1 if args.i is None else int(args.i)
+        time.sleep(time_to_sleep)
 
 if __name__ == '__main__':
     main()
