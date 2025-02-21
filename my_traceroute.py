@@ -34,16 +34,21 @@ def send_packet(packet, address, ttl):
     finally:
         raw_socket.close()
 
-def recieve_packet():
+def recieve_packet(start_time, probe):
     raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
     raw_socket.bind(('0.0.0.0', 0))
     raw_socket.settimeout(5)
     try:
         packet, addr = raw_socket.recvfrom(65565)
+        end_time = time.time()
+        time_elapsed = (end_time - start_time) * 1000
+        print(f"{time_elapsed} ms", end ="    ")
+        if probe == 2:
+            print(addr[0])
     except OSError:
-        return False
-    print(f"Received packet from {addr}: {packet}")
-    raw_socket.close()
+        return None
+    finally:
+        raw_socket.close()
 
 def trace_route(args):
     iteration = 1
@@ -52,11 +57,14 @@ def trace_route(args):
         if iteration > 30:
             break
 
+        print(iteration, end ="    ")
+
         for probe in range(3):
             packet = create_packet(seq_num, iteration)
+            start_time = time.time()
             send_packet(packet, args.address, iteration)
             seq_num += 1
-            recieve_packet()
+            recieve_packet(start_time, probe)
 
         iteration += 1
 
