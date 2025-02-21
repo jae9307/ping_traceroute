@@ -40,7 +40,7 @@ def recieve_packet():
     raw_socket.settimeout(5)
     try:
         packet, addr = raw_socket.recvfrom(65565)
-    except TimeoutError:
+    except OSError:
         return False
     print(f"Received packet from {addr}: {packet}")
     raw_socket.close()
