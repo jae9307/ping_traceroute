@@ -61,6 +61,7 @@ def trace_route(args):
 
     iteration = 1
     seq_num = 0
+    num_unanswered_probes = 0
     while True:
         if iteration > 30:
             break
@@ -76,6 +77,8 @@ def trace_route(args):
             reply_address = recieve_packet(start_time, probe)
             if reply_address is not None:
                 address = reply_address
+            else:
+                num_unanswered_probes += 1
 
         if args.n is False:
             try:
@@ -90,6 +93,9 @@ def trace_route(args):
             break
 
         iteration += 1
+
+    if args.S is True:
+        print(f'Number of unanswered probes: {num_unanswered_probes}')
 
 def main():
     # Define command line parameters.
