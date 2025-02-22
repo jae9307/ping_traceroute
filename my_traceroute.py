@@ -76,7 +76,12 @@ def trace_route(args):
                 address = reply_address
 
         iteration += 1
-        print(address)
+
+        try:
+            hostname = socket.gethostbyaddr(address)
+            print(f'{hostname[0]} [{address}]')
+        except (socket.herror, socket.gaierror):
+            print(address)
 
 def main():
     # Define command line parameters.
