@@ -75,13 +75,19 @@ def trace_route(args):
             if reply_address is not None:
                 address = reply_address
 
-        iteration += 1
-
-        try:
-            hostname = socket.gethostbyaddr(address)
-            print(f'{hostname[0]} [{address}]')
-        except (socket.herror, socket.gaierror):
+        if args.n is None:
+            try:
+                hostname = socket.gethostbyaddr(address)
+                print(f'{hostname[0]} [{address}]')
+            except (socket.herror, socket.gaierror):
+                print(address)
+        else:
             print(address)
+
+        if address == args.address:
+            break
+
+        iteration += 1
 
 def main():
     # Define command line parameters.
