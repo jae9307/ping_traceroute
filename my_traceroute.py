@@ -75,7 +75,7 @@ def trace_route(args):
             if reply_address is not None:
                 address = reply_address
 
-        if args.n is None:
+        if args.n is False:
             try:
                 hostname = socket.gethostbyaddr(address)
                 print(f'{hostname[0]} [{address}]')
