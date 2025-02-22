@@ -2,7 +2,6 @@ import struct
 import socket
 import argparse
 import time
-from multiprocessing import Process
 import numpy as np
 
 def get_checksum(data):
