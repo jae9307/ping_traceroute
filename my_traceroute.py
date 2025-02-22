@@ -57,6 +57,8 @@ def recieve_packet(start_time, probe):
     return address
 
 def trace_route(args):
+    num_probes = int(args.q) if args.q is not None else 3
+
     iteration = 1
     seq_num = 0
     while True:
@@ -66,7 +68,7 @@ def trace_route(args):
         print(iteration, end ="    ")
 
         address = 'Request Timed Out'
-        for probe in range(3):
+        for probe in range(num_probes):
             packet = create_packet(seq_num, iteration)
             start_time = time.time()
             send_packet(packet, args.address, iteration)
