@@ -69,10 +69,11 @@ def main():
 
     args = parser.parse_args()
 
-    ping_process = Process(target=ping(args))
+    ping_process = Process(target=ping, args=(args,))
     ping_process.start()
     if args.t is not None:
         ping_process.join(timeout=int(args.t))
+        print("Terminating")
         ping_process.terminate()
 
 if __name__ == '__main__':
