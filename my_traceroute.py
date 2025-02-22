@@ -3,6 +3,7 @@ import socket
 import argparse
 import time
 from multiprocessing import Process
+import numpy as np
 
 def get_checksum(data):
     checksum = 0
@@ -37,18 +38,23 @@ def send_packet(packet, address, ttl):
 def recieve_packet(start_time, probe):
     raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
     raw_socket.bind(('0.0.0.0', 0))
-    raw_socket.settimeout(5)
+    raw_socket.settimeout(3)
+
+    address = ''
     try:
-        packet, addr = raw_socket.recvfrom(65565)
+        packet, reply_address = raw_socket.recvfrom(65565)
         end_time = time.time()
         time_elapsed = (end_time - start_time) * 1000
-        print(f"{time_elapsed} ms", end ="    ")
-        if probe == 2:
-            print(addr[0])
+        print(f"{np.round(time_elapsed)} ms", end ="    ")
+        if reply_address is not None:
+            address = reply_address[0]
     except OSError:
+        print("*", end="         ")
         return None
     finally:
         raw_socket.close()
+
+    return address
 
 def trace_route(args):
     iteration = 1
@@ -59,14 +65,18 @@ def trace_route(args):
 
         print(iteration, end ="    ")
 
+        address = 'Request Timed Out'
         for probe in range(3):
             packet = create_packet(seq_num, iteration)
             start_time = time.time()
             send_packet(packet, args.address, iteration)
             seq_num += 1
-            recieve_packet(start_time, probe)
+            reply_address = recieve_packet(start_time, probe)
+            if reply_address is not None:
+                address = reply_address
 
         iteration += 1
+        print(address)
 
 def main():
     # Define command line parameters.
