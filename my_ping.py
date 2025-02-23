@@ -37,27 +37,56 @@ def send_packet(packet, address):
 def recieve_packet(start_time):
     raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
     raw_socket.bind(('0.0.0.0', 0))
-    packet, addr = raw_socket.recvfrom(65565)
-    end_time = time.time()
-    ttl = int(packet[8])
-    print(f"Reply from: {addr[0]}: bytes={len(packet[28:])} time={np.round((end_time - start_time) * 1000)}ms"
-          f" TTL={ttl}")  # bytes = size of payload
-    raw_socket.close()
+
+    rtt = 0
+    try:
+        packet, addr = raw_socket.recvfrom(65565)
+        end_time = time.time()
+        rtt = np.round((end_time - start_time) * 1000)
+        ttl = int(packet[8])
+        print(f"Reply from: {addr[0]}: bytes={len(packet[28:])} time={rtt}ms"
+              f" TTL={ttl}")  # bytes = size of payload
+    except OSError:
+        print("Request Timed Out")
+        return 0, rtt
+    finally:
+        raw_socket.close()
+
+    return 1, rtt
 
 def ping(args):
     payload_size = int(args.s) if args.s is not None else 56
 
+    num_pkts_sent = 0
+    num_pkts_received = 0
     iteration = 0
+    round_trip_times = []
     while True:
         packet = create_packet(iteration, payload_size)
 
         start_time = time.time()
         send_packet(packet, args.address)
+        num_pkts_sent += 1
 
-        recieve_packet(start_time)
+        pkt_received, rtt = recieve_packet(start_time)
+        num_pkts_received += pkt_received
+        round_trip_times.append(rtt)
 
         iteration += 1
         if args.c is not None and iteration >= int(args.c):
+            round_trip_times.sort()
+            sum = 0
+            for trip_time in round_trip_times:
+                sum += trip_time
+            average_rtt = sum/len(round_trip_times)
+
+            print(f"Ping statistics for {args.address}:")
+            print(f"    Packets: Sent = {num_pkts_sent}, Received = {num_pkts_received}, "
+                  f"Lost = {num_pkts_sent - num_pkts_received} "
+                  f"({((num_pkts_sent - num_pkts_received)/num_pkts_sent) * 100}% loss),")
+            print("Approximate round trip times in milli-seconds:")
+            print(f"    Minimum = {round_trip_times[0]}ms, Maximum = {round_trip_times[-1]}ms, "
+                  f"Average = {average_rtt}ms")
             break
 
         time_to_sleep = 1 if args.i is None else int(args.i)
@@ -78,7 +107,6 @@ def main():
     ping_process.start()
     if args.t is not None:
         ping_process.join(timeout=int(args.t))
-        print("Terminating")
         ping_process.terminate()
 
 if __name__ == '__main__':
