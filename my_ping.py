@@ -3,6 +3,7 @@ import socket
 import argparse
 import time
 from multiprocessing import Process
+import numpy as np
 
 
 def create_packet(seq_num, payload_size):
@@ -33,11 +34,14 @@ def send_packet(packet, address):
     finally:
         raw_socket.close()
 
-def recieve_packet():
+def recieve_packet(start_time):
     raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
     raw_socket.bind(('0.0.0.0', 0))
     packet, addr = raw_socket.recvfrom(65565)
-    print(f"Received packet from {addr}: {packet}")
+    end_time = time.time()
+    ttl = int(packet[8])
+    print(f"Reply from: {addr[0]}: bytes={len(packet[28:])} time={np.round((end_time - start_time) * 1000)}ms"
+          f" TTL={ttl}")  # bytes = size of payload
     raw_socket.close()
 
 def ping(args):
@@ -47,9 +51,10 @@ def ping(args):
     while True:
         packet = create_packet(iteration, payload_size)
 
+        start_time = time.time()
         send_packet(packet, args.address)
 
-        recieve_packet()
+        recieve_packet(start_time)
 
         iteration += 1
         if args.c is not None and iteration >= int(args.c):
