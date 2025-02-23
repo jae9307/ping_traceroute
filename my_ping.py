@@ -37,6 +37,7 @@ def send_packet(packet, address):
 def recieve_packet(start_time):
     raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
     raw_socket.bind(('0.0.0.0', 0))
+    raw_socket.settimeout(3)
 
     rtt = 0
     try:
@@ -56,6 +57,7 @@ def recieve_packet(start_time):
 
 def ping(args):
     payload_size = int(args.s) if args.s is not None else 56
+    print(f"Pinging {args.address} with {payload_size} bytes")
 
     num_pkts_sent = 0
     num_pkts_received = 0
